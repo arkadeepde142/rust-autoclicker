@@ -1,0 +1,11 @@
+[package]
+name = "autoclicker"
+version = "0.1.0"
+authors = ["Arkadeep De <arkadeepde142@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+enigo = "0.0.14"
+druid = "0.6.0"
