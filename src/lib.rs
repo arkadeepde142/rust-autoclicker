@@ -1,10 +1,9 @@
 use enigo::*;
-use std::sync::mpsc::{channel, Receiver, Sender, SendError};
+use std::cmp::PartialEq;
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::cmp::PartialEq;
-
-#[derive(std::fmt::Debug, Clone)]
+#[derive(std::fmt::Debug)]
 pub struct Autoclicker {
     sender: Sender<Message>,
     worker: Option<std::thread::JoinHandle<()>>,
@@ -17,16 +16,23 @@ pub enum Message {
     Stop,
 }
 
+impl Drop for Autoclicker {
+    fn drop(&mut self) {
+        if let Ok(()) = self.stop() {
+            println!("Shutting down");
+        }
+    }
+}
 
 impl Autoclicker {
-    pub fn new(delay: std::time::Duration ) -> Autoclicker {
+    pub fn new(delay: std::time::Duration) -> Autoclicker {
         let (tx, rx) = channel();
         let rx = Arc::new(Mutex::new(rx));
         Autoclicker {
             sender: tx,
             receiver: rx,
             worker: None,
-            delay: Arc::new(Mutex::new(delay))
+            delay: Arc::new(Mutex::new(delay)),
         }
     }
 
@@ -46,16 +52,20 @@ impl Autoclicker {
         Ok(())
     }
 
-    pub fn stop(&mut self) -> Result<(), SendError<Message>> {
-        let res = self.sender.send(Message::Stop);
-        if let Some(thread) = self.worker {
+    pub fn stop(&mut self) -> Result<(), ()> {
+        let _ = self.sender.send(Message::Stop);
+        if let Some(thread) = self.worker.take() {
             thread.join().unwrap();
-        } else {
-            println!("Unable to join");
-        }
-        if res == Ok(()) {
             self.worker = None;
+            return Ok(());
         }
-        res
+        Err(())
+    }
+
+    pub fn running(&self) -> bool {
+        if let Some(_) = self.worker {
+            return true;
+        }
+        false
     }
 }
