@@ -39,7 +39,6 @@ impl Formatter<u64> for DelayFormatter {
     fn value(&self, input: &str) -> Result<u64, ValidationError> {
         match input.parse::<u64>() {
             Ok(value) => {
-                println!("{}", value);
                 return Ok(value);
             }
             Err(err) => {
