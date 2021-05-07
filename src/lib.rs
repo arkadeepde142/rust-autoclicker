@@ -3,12 +3,13 @@ use std::cmp::PartialEq;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
+
 #[derive(std::fmt::Debug)]
 pub struct Autoclicker {
     sender: Sender<Message>,
     worker: Option<std::thread::JoinHandle<()>>,
     receiver: Arc<Mutex<Receiver<Message>>>,
-    delay: Arc<Mutex<std::time::Duration>>,
+    delay: u64,
 }
 
 #[derive(PartialEq)]
@@ -25,25 +26,25 @@ impl Drop for Autoclicker {
 }
 
 impl Autoclicker {
-    pub fn new(delay: std::time::Duration) -> Autoclicker {
+    pub fn new(delay: u64) -> Autoclicker {
         let (tx, rx) = channel();
         let rx = Arc::new(Mutex::new(rx));
         Autoclicker {
             sender: tx,
             receiver: rx,
             worker: None,
-            delay: Arc::new(Mutex::new(delay)),
+            delay: delay,
         }
     }
 
     pub fn start(&mut self) -> Result<(), ()> {
-        let delay = Arc::clone(&self.delay);
+        let delay = self.delay;
         let rx = Arc::clone(&self.receiver);
         self.worker = Some(thread::spawn(move || {
             let mut enigo = Enigo::new();
             loop {
                 enigo.mouse_click(MouseButton::Left);
-                thread::sleep(*(delay.lock().unwrap()));
+                thread::sleep(std::time::Duration::from_millis(delay));
                 if Ok(Message::Stop) == (*rx.lock().unwrap()).try_recv() {
                     return;
                 }
@@ -68,4 +69,16 @@ impl Autoclicker {
         }
         false
     }
+}
+
+#[test]
+fn auto_clicker_bot_test() {
+    let mut autoclicker = Autoclicker::new(200);
+    assert_eq!(autoclicker.running(), false);
+    assert_eq!(autoclicker.start(), Ok(()));
+    assert_eq!(autoclicker.running(), true);
+    assert_eq!(autoclicker.delay, 200);
+    std::thread::sleep(std::time::Duration::from_millis(200));
+    assert_eq!(autoclicker.stop(), Ok(()));
+    assert_eq!(autoclicker.running(), false);
 }
