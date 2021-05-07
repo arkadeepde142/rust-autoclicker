@@ -8,5 +8,5 @@ edition = "2018"
 
 [dependencies]
 enigo = "0.0.14"
-druid = "0.6.0"
+druid = "0.7.0"
 rdev = "0.1.0"
