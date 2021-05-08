@@ -3,7 +3,10 @@ name = "autoclicker"
 version = "0.1.0"
 authors = ["Arkadeep De <arkadeepde142@gmail.com>"]
 edition = "2018"
-
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+categories = ["autoclicker", "druid"]
+description = "Simple autoclicker written in Rust"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
